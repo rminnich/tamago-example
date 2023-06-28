@@ -21,6 +21,8 @@ import (
 	"github.com/usbarmory/tamago-example/cmd"
 	"github.com/usbarmory/tamago-example/internal/semihosting"
 	"github.com/usbarmory/tamago-example/network"
+
+	_ "github.com/usbarmory/tamago-example/bb"
 )
 
 var Build string
