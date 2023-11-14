@@ -79,7 +79,7 @@ func main() {
 			err := doit(console)
 			log.Printf("console err %v; take 5", err)
 			go func() {
-				var devcons io.ReadWriter
+				devcons := cmd.Console()
 				term := term.NewTerminal(devcons, "uroot")
 				term.SetPrompt("uroot>")
 
