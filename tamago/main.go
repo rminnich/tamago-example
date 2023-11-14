@@ -14,10 +14,12 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"syscall"
 	"time"
 
 	"github.com/usbarmory/tamago/soc/nxp/enet"
 	"github.com/usbarmory/tamago/soc/nxp/usb"
+	"golang.org/x/term"
 
 	"github.com/usbarmory/tamago-example/cmd"
 	"github.com/usbarmory/tamago-example/network"
@@ -61,19 +63,14 @@ func main() {
 
 	cmd.NIC = eth
 
-	log.Printf("os.Stdin %v fd %v os.Stdout %v os.Stderr %v", os.Stdin, os.Stdin.Fd(), os.Stdout, os.Stderr)
-	{
-	n, err := os.Stderr.Write([]byte("hi there"))
-	log.Printf("%d %v", n, err)
+	var fd [2]int
+	syscall.Pipe(fd[:])
+	if err := syscall.Dup2(0, fd[0]); err != nil {
+		log.Printf("syscall.Dup2(0, %d): %v", fd[0], err)
 	}
-	{
-	var b [9]byte
-	n, err := os.Stdin.Read(b[:])
-	log.Printf("%s %d %v %q", os.Stdin.Name(), n, err, b)
-	n, err = os.Stdout.Read(b[:])
-	log.Printf("%s %d %v %q", os.Stdout.Name(), n, err, b)
-	}
-	log.Printf("hasUSB %v hasEth %v", hasUSB, hasEth)
+	os.Stdin = os.NewFile(0, "pipe input to os.Stdin")
+	w := os.NewFile(uintptr(fd[1]), "pipe output to os.Stdin")
+
 	if hasUSB || hasEth {
 		network.SetupStaticWebAssets(cmd.Banner)
 		network.StartInterruptHandler(usb, eth)
@@ -81,6 +78,29 @@ func main() {
 		for {
 			err := doit(console)
 			log.Printf("console err %v; take 5", err)
+			go func() {
+				var devcons io.ReadWriter
+				term := term.NewTerminal(devcons, "uroot")
+				term.SetPrompt("uroot>")
+
+				for {
+					s, err := term.ReadLine()
+					log.Printf("readline %q %v", s, err)
+
+					if err == io.EOF {
+						return
+					}
+
+					if err != nil {
+						log.Printf("readline error, %v", err)
+						continue
+					}
+
+					if _, err := w.Write([]byte(s)); err != nil {
+						log.Printf("pipe write:%v", err)
+					}
+				}
+			}()
 			time.Sleep(5 * time.Second)
 		}
 	}

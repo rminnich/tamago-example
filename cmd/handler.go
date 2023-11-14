@@ -134,6 +134,10 @@ func (iface *Interface) Start(term *term.Terminal) {
 	}
 }
 
+func Console() io.ReadWriter {
+	return console
+}
+
 func SerialConsole(iface *Interface) {
 	term := term.NewTerminal(console, "")
 	term.SetPrompt(string(term.Escape.Red) + "> " + string(term.Escape.Reset))
