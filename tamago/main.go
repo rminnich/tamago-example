@@ -61,6 +61,18 @@ func main() {
 
 	cmd.NIC = eth
 
+	log.Printf("os.Stdin %v fd %v os.Stdout %v os.Stderr %v", os.Stdin, os.Stdin.Fd(), os.Stdout, os.Stderr)
+	{
+	n, err := os.Stderr.Write([]byte("hi there"))
+	log.Printf("%d %v", n, err)
+	}
+	{
+	var b [9]byte
+	n, err := os.Stdin.Read(b[:])
+	log.Printf("%s %d %v %q", os.Stdin.Name(), n, err, b)
+	n, err = os.Stdout.Read(b[:])
+	log.Printf("%s %d %v %q", os.Stdout.Name(), n, err, b)
+	}
 	log.Printf("hasUSB %v hasEth %v", hasUSB, hasEth)
 	if hasUSB || hasEth {
 		network.SetupStaticWebAssets(cmd.Banner)
