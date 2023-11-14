@@ -78,6 +78,9 @@ func main() {
 		for {
 			err := doit(console)
 			log.Printf("console err %v; take 5", err)
+			log.Printf("can we print to Stdout")
+			fmt.Printf("hi there\n")
+			log.Printf("you should have seen hi there")
 			go func() {
 				devcons := cmd.Console()
 				term := term.NewTerminal(devcons, "uroot")
