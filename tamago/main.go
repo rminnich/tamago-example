@@ -86,6 +86,7 @@ func main() {
 				term := term.NewTerminal(devcons, "uroot")
 				term.SetPrompt("uroot>")
 
+				runtime.Exit = exited
 				for {
 					s, err := term.ReadLine()
 					log.Printf("readline %q %v", s, err)
@@ -110,6 +111,10 @@ func main() {
 	}
 }
 
+func exited() {
+	panic("exiting")
+}
+
 func doit(console *cmd.Interface) error {
 	var err error
 	defer func() {
@@ -118,9 +123,6 @@ func doit(console *cmd.Interface) error {
 			err = fmt.Errorf("wel: %v", r)
 		}
 	}()
-	runtime.Exit = func() {
-		panic("hey we exited")
-	}
 	cmd.SerialConsole(console)
 	return err
 }
