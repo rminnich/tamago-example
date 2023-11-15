@@ -7,12 +7,13 @@ import "os"
 import "flag"
 import "strings"
 
-func runone(s string) error {
+func runone(s string, w *os.File) error {
 	var err error
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("uroot Recovered. Error:%v\n", r)
 			err = fmt.Errorf("wel: %v", r)
+			w.Close()
 		}
 	}()
 	os.Args = strings.Split(s, " ")

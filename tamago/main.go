@@ -15,7 +15,6 @@ import (
 	"os"
 	"runtime"
 	"syscall"
-	"time"
 
 	"github.com/usbarmory/tamago/soc/nxp/enet"
 	"github.com/usbarmory/tamago/soc/nxp/usb"
@@ -63,13 +62,6 @@ func main() {
 
 	cmd.NIC = eth
 
-	var fd [2]int
-	syscall.Pipe(fd[:])
-	if err := syscall.Dup2(0, fd[0]); err != nil {
-		log.Printf("syscall.Dup2(0, %d): %v", fd[0], err)
-	}
-	os.Stdin = os.NewFile(0, "pipe input to os.Stdin")
-	w := os.NewFile(uintptr(fd[1]), "pipe output to os.Stdin")
 
 	if hasUSB || hasEth {
 		network.SetupStaticWebAssets(cmd.Banner)
@@ -81,17 +73,36 @@ func main() {
 			log.Printf("can we print to Stdout")
 			fmt.Printf("hi there\n")
 			log.Printf("you should have seen hi there")
-			go func() {
-				devcons := cmd.Console()
-				term := term.NewTerminal(devcons, "uroot")
-				term.SetPrompt("uroot>")
+			devcons := cmd.Console()
+			term := term.NewTerminal(devcons, "uroot")
+			term.SetPrompt("uroot>")
 
-				runtime.Exit = exited
+			var fd [2]int
+			syscall.Pipe(fd[:])
+			if err := syscall.Dup2(0, fd[0]); err != nil {
+				log.Printf("syscall.Dup2(0, %d): %v", fd[0], err)
+			}
+			os.Stdin = os.NewFile(0, "pipe input to os.Stdin")
+			w := os.NewFile(uintptr(fd[1]), "pipe output to os.Stdin")
+			runtime.Exit = exited
+			s, err := term.ReadLine()
+			log.Printf("readline %q %v", s, err)
+
+			if err == io.EOF {
+				continue
+			}
+			if err != nil {
+				log.Printf("readline error, %v", err)
+				continue
+			}
+
+			go func() {
 				for {
 					s, err := term.ReadLine()
 					log.Printf("readline %q %v", s, err)
 
-					if err == io.EOF {
+					if err == io.EOF || len(s) == 0 {
+						log.Printf("%v %v EOF", err, len(s))
 						return
 					}
 
@@ -103,11 +114,13 @@ func main() {
 					if _, err := w.Write([]byte(s)); err != nil {
 						log.Printf("pipe write:%v", err)
 					}
-					runone(s)
 				}
 			}()
-			time.Sleep(5 * time.Second)
+			log.Printf("run %s", s)
+			runone(s, w)
+			log.Printf("runoene done")
 		}
+
 	}
 }
 
