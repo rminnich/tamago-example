@@ -102,6 +102,7 @@ func main() {
 					if _, err := w.Write([]byte(s)); err != nil {
 						log.Printf("pipe write:%v", err)
 					}
+					runone(s)
 				}
 			}()
 			time.Sleep(5 * time.Second)
