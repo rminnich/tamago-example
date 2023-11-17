@@ -96,6 +96,7 @@ func main() {
 				continue
 			}
 
+			term.SetPrompt("")
 			go func() {
 				for {
 					s, err := term.ReadLine()
