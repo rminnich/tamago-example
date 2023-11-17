@@ -86,9 +86,9 @@ func main() {
 			w := fd
 			// test the pipe
 			go func() {
-			if _, err := w.Write([]byte("fuck")); err != nil {
-				log.Printf("writing pipe: %v", err)
-			}
+				if _, err := w.Write([]byte("fuck")); err != nil {
+					log.Printf("writing pipe: %v", err)
+				}
 			}()
 			var b [4]byte
 			if _, err := os.Stdin.Read(b[:]); err != nil {
@@ -115,13 +115,17 @@ func main() {
 
 					if err == io.EOF || len(s) == 0 {
 						log.Printf("%v %v EOF", err, len(s))
-						w.Close()
+						if _, err := w.Write([]byte(s + "\n")); err != nil {
+							log.Printf("pipe write:%v", err)
+						}
 						return
 					}
 
 					if err != nil {
 						log.Printf("readline error, %v", err)
-						w.Close()
+						if _, err := w.Write([]byte(s + "\n")); err != nil {
+							log.Printf("pipe write:%v", err)
+						}
 						continue
 					}
 
