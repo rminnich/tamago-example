@@ -77,19 +77,19 @@ func main() {
 			term := term.NewTerminal(devcons, "uroot")
 			term.SetPrompt("uroot>")
 
-			var fd [2]int
-			syscall.Pipe(fd[:])
-			if false {
-				if err := syscall.Dup2(0, fd[0]); err != nil {
-					log.Printf("syscall.Dup2(0, %d): %v", fd[0], err)
-				}
+			fd, err := os.OpenFile("/dev/pipe", os.O_RDWR, 0)
+			if err != nil {
+				log.Printf("pipe: %v", err)
+				continue
 			}
-			os.Stdin = os.NewFile(uintptr(fd[0]), "pipe input to os.Stdin")
-			w := os.NewFile(uintptr(fd[1]), "pipe output to os.Stdin")
+			os.Stdin = fd
+			w := fd
 			// test the pipe
+			go func() {
 			if _, err := w.Write([]byte("fuck")); err != nil {
 				log.Printf("writing pipe: %v", err)
 			}
+			}()
 			var b [4]byte
 			if _, err := os.Stdin.Read(b[:]); err != nil {
 				log.Printf("reading pipe:%v", err)
@@ -131,17 +131,7 @@ func main() {
 				}
 			}()
 			log.Printf("run %s", s)
-			if true {
-				runone(s, w)
-			} else {
-				var err error
-				for err == nil {
-					var line [128]byte
-					var n int
-					n, err = os.Stdin.Read(line[:])
-					log.Printf("stdin: %v %v", err, line[:n])
-				}
-			}
+			runone(s, w)
 			log.Printf("runoene done")
 		}
 
