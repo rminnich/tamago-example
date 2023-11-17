@@ -8,22 +8,32 @@
 
 package main
 
-import "syscall"
+import (
+	"io"
+	"syscall"
+)
 
-type pipeFile struct{}
+type pipeFile struct {
+	r *io.PipeReader
+	w *io.PipeWriter
+}
 
 func openPipe() (syscall.DevFile, error) {
-	return pipeFile{}, nil
+	r, w := io.Pipe()
+	return pipeFile{r: r, w: w}, nil
 }
 
 func (f pipeFile) close() error {
+	f.w.Close()
 	return nil
 }
 
 func (f pipeFile) Pread(b []byte, offset int64) (int, error) {
-	return len(b), nil
+	n, err := f.r.Read(b)
+	return n, err
 }
 
 func (f pipeFile) Pwrite(b []byte, offset int64) (int, error) {
-	return len(b), nil
+	n, err := f.w.Write(b)
+	return n, err
 }
