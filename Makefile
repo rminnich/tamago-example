@@ -14,7 +14,7 @@ REV = 22
 
 SHELL = /bin/bash
 
-APP := example
+APP ?= example
 TARGET ?= "usbarmory"
 TEXT_START := 0x80010000 # ramStart (defined in mem.go under relevant tamago/soc package) + 0x10000
 
@@ -155,7 +155,9 @@ else
 $(APP): check_tamago IMX6ULL.yaml
 	$(GOENV) $(TAMAGO) build $(GOFLAGS) -o ${APP}
 
-uroot: check_uroot IMX6ULL.yaml $(APP)
+utx: uroot
+
+uroot: check_uroot IMX6ULL.yaml
 	rm -rf $(PWD)/tdir
 	$(GOENV) u-root -go-no-strip -no-strip -tmpdir $(PWD)/tdir -o tx -defaultsh="forth" -initcmd="forth" -gen-dir /tmp/x -uroot-source=~/go/src/github.com/u-root/u-root  $(GOTAGS)  -go-extra-args -ldflags="-T $(TEXT_START) -E $(ENTRY_POINT) -R 0x1000" .  \
 	tamago \
