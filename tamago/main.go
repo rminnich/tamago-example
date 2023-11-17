@@ -69,10 +69,6 @@ func main() {
 	} else {
 		for {
 			err := doit(console)
-			log.Printf("console err %v; take 5", err)
-			log.Printf("can we print to Stdout")
-			fmt.Printf("hi there\n")
-			log.Printf("you should have seen hi there")
 			devcons := cmd.Console()
 			term := term.NewTerminal(devcons, "uroot")
 			term.SetPrompt("uroot>")
@@ -88,18 +84,6 @@ func main() {
 				log.Printf("write pipe: %v", err)
 				continue
 			}
-			// test the pipe
-			go func() {
-				if _, err := w.Write([]byte("fuck")); err != nil {
-					log.Printf("writing pipe: %v", err)
-				}
-			}()
-			var b [4]byte
-			if _, err := os.Stdin.Read(b[:]); err != nil {
-				log.Printf("reading pipe:%v", err)
-				continue
-			}
-			log.Printf("read %q from pipe", b)
 			runtime.Exit = exited
 			s, err := term.ReadLine()
 			log.Printf("readline %q %v", s, err)
