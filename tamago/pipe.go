@@ -18,9 +18,16 @@ type pipeFile struct {
 	w *io.PipeWriter
 }
 
+var pipe *pipeFile
+
+// This is a real kludge for now but we'll do more later.
+
 func openPipe() (syscall.DevFile, error) {
-	r, w := io.Pipe()
-	return pipeFile{r: r, w: w}, nil
+	if pipe == nil {
+		r, w := io.Pipe()
+		pipe = &pipeFile{r: r, w: w}
+	}
+	return pipe, nil
 }
 
 func (f pipeFile) close() error {

@@ -77,13 +77,17 @@ func main() {
 			term := term.NewTerminal(devcons, "uroot")
 			term.SetPrompt("uroot>")
 
-			fd, err := os.OpenFile("/dev/pipe", os.O_RDWR, 0)
+			fd, err := os.OpenFile("/dev/pipe", os.O_RDONLY, 0)
 			if err != nil {
 				log.Printf("pipe: %v", err)
 				continue
 			}
 			os.Stdin = fd
-			w := fd
+			w, err := os.OpenFile("/dev/pipe", os.O_WRONLY, 0)
+			if err != nil {
+				log.Printf("write pipe: %v", err)
+				continue
+			}
 			// test the pipe
 			go func() {
 				if _, err := w.Write([]byte("fuck")); err != nil {
@@ -115,7 +119,7 @@ func main() {
 
 					if err == io.EOF || len(s) == 0 {
 						log.Printf("%v %v EOF", err, len(s))
-						if _, err := w.Write([]byte(s + "\n")); err != nil {
+						if _, err := w.Write([]byte{}); err != nil {
 							log.Printf("pipe write:%v", err)
 						}
 						return
@@ -123,7 +127,7 @@ func main() {
 
 					if err != nil {
 						log.Printf("readline error, %v", err)
-						if _, err := w.Write([]byte(s + "\n")); err != nil {
+						if _, err := w.Write([]byte{}); err != nil {
 							log.Printf("pipe write:%v", err)
 						}
 						continue
