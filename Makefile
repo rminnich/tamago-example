@@ -177,8 +177,9 @@ builduroot: uroot
 			-ldflags="-T $(TEXT_START) -E $(ENTRY_POINT) -R 0x1000" .  )
 	cp tdir/*/src/bb.u-root.com/bb/tx utx
 
+EXTRA ?= ""
 urootqemu: builduroot
-	$(QEMU) -kernel utx -monitor /dev/ttys001
+	$(QEMU) -kernel utx $(EXTRA)
 
 endif
 
